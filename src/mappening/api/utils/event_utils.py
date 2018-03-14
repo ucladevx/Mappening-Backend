@@ -1,6 +1,9 @@
 from mappening.utils.database import ucla_events_collection, events_ml_collection
 import event_caller
-
+import mlcateg
+import mlcateg.vectorizer
+import mlcateg.nbModel
+import mlcateg.giveProbPerCategory
 
 from flask import jsonify
 import time, datetime, dateutil.parser
@@ -68,8 +71,7 @@ def process_event_info(event):
                 'interested': event['interested_count'],
                 'maybe': event['maybe_count']
             },
-            # TODO: whenever category is checked, run Jorge's online ML algorithm
-            'category': event.get('category', '<NONE>'),
+            'category': event.get('category', mlcateg.giveProbPerCategory(mlcateg.vectorizer, mlcateg.nbModel, [event.get('description', '')])),
             'cover_picture': event['cover'].get('source', '<NONE>') if 'cover' in event else '<NONE>',
             'is_cancelled': event.get('is_canceled', False),
             'ticketing': {
