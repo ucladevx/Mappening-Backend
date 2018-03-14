@@ -1,5 +1,5 @@
 from mappening.utils.database import ucla_events_collection, events_ml_collection
-import event_caller
+from . import event_caller
 
 
 from flask import jsonify

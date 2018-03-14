@@ -9,7 +9,7 @@ uri = 'mongodb://{0}:{1}@ds044709.mlab.com:44709/mappening_data'.format(MLAB_USE
 client = MongoClient(uri)
 db = client['mappening_data']
 
-print "Connected to database!"
+print("Connected to database!")
 
 # Get all the collections
 
@@ -39,4 +39,4 @@ users_collection = db.users
 # test
 test_collection = db.test
 
-print "Got database collections..."
+print("Got database collections...")
