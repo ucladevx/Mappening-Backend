@@ -1,0 +1,46 @@
+FROM alpine:3.6
+
+ENV ALPINE_VERSION=3.6 \
+    PACKAGES="bash ca-certificates python2 py-setuptools curl"
+
+# Set the PYTHON STUPID UNICODE EOFUBDHSKJOIWEJNOIEFNODKL
+ENV PYTHONIOENCODING UTF-8
+
+# replacing default repositories with edge ones
+RUN echo \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" > /etc/apk/repositories \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+
+# Add the packages, with a CDN-breakage fallback if needed
+RUN echo \
+  && apk add --no-cache $PACKAGES || \
+    (sed -i -e 's/dl-cdn/dl-4/g' /etc/apk/repositories && apk add --no-cache $PACKAGES)
+
+# turn back the clock - hacky lmao
+RUN echo \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/v$ALPINE_VERSION/main/" > /etc/apk/repositories
+# && echo "@edge-testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
+# && echo "@edge-community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+# && echo "@edge-main http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
+
+# make some useful symlinks that are expected to exist
+RUN echo \
+  && if [[ ! -e /usr/bin/python ]];        then ln -sf /usr/bin/python2.7 /usr/bin/python; fi \
+  && if [[ ! -e /usr/bin/python-config ]]; then ln -sf /usr/bin/python2.7-config /usr/bin/python-config; fi \
+  && if [[ ! -e /usr/bin/easy_install ]];  then ln -sf /usr/bin/easy_install-2.7 /usr/bin/easy_install; fi
+
+# Install and upgrade Pip
+RUN echo \
+  && easy_install pip \
+  && pip install --upgrade pip \
+  && if [[ ! -e /usr/bin/pip ]]; then ln -sf /usr/bin/pip2.7 /usr/bin/pip; fi \
+  && echo
+
+# Install numpy and scipy for ml categories
+# Takes 5 years to run... building this part as the base image
+# It is cached but just in case we're adding this image
+# https://gist.github.com/orenitamar/f29fb15db3b0d13178c1c4dd611adce2
+RUN echo "http://dl-8.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN apk add --update-cache gcc gfortran python python-dev py-pip build-base wget freetype-dev libpng-dev openblas-dev
+RUN pip install numpy scipy gensim

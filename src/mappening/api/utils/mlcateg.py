@@ -1,3 +1,5 @@
+# TODO: remove redundant code (aka tokenizer)
+
 from mappening.utils.database import ucla_events_collection, events_ml_collection
 
 import nltk
