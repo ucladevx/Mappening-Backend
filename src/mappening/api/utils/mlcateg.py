@@ -1,10 +1,11 @@
+from mappening.utils.database import ucla_events_collection, events_ml_collection
+
 import nltk
 nltk.download('stopwords')
 nltk.download('perluniprops')
 nltk.download('nonbreaking_prefixes')
 nltk.download('punkt')
 
-from ourDb import events_collection, total_events_collection, events_ml_collection
 import re
 import nltk
 import string
