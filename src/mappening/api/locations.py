@@ -30,7 +30,7 @@ def get_all_locations():
 # UPDATE DATABASE
 
 # Add locations to database from given collection
-# Sample collection(s): events_ml_collection, ucla_events_collection
+# Sample collection(s): events_ml_collection, events_current_collection
 # TODO: hook up so everytime we get new events we add their location data to db
 # TODO remove route and move to some utils thing
 # @locations.route('/add/<events_collection>', methods=['PUT'])

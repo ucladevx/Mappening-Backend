@@ -13,13 +13,18 @@ print("Connected to database!")
 
 # Get all the collections
 
+# testing collection, used to store any temporary data
+# currently, use this to store event data if -t option included in command line
+events_test_collection = db.events_test
+
 # events.py
-ucla_events_collection = db.ucla_events
-saved_pages_collection = db.saved_pages
+events_current_collection = db.ucla_events  # TODO: change this to events_current, on MLab too
+pages_saved_collection = db.pages_saved
+pages_unwanted_collection = db.pages_unwanted
 events_ml_collection = db.events_ml
 
 # event_caller.py
-# saved_pages_collection = db.saved_pages
+# pages_saved_collection = db.pages_saved
 # events_ml_collection = db.events_ml
 unknown_locations_collection = db.unknown_locations
 
@@ -36,7 +41,7 @@ users_collection = db.users
 # users.py
 # map_users_collection = db.map_users
 
-# test
+# test, for NON EVENTS things
 test_collection = db.test
 
 print("Got database collections...")

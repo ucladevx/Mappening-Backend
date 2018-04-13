@@ -88,7 +88,7 @@ API DOCS
 """
 # Interacting with events collection in mlab
 
-from mappening.utils.database import ucla_events_collection, saved_pages_collection, events_ml_collection
+from mappening.utils.database import events_current_collection, pages_saved_collection, events_ml_collection
 from mappening.api.utils import event_utils
 
 from flask import Flask, jsonify, request, json, Blueprint
@@ -137,10 +137,10 @@ def search_events(search_term):
     if date_regex_obj:
         # event_date is for sure a valid date string if date_regex_obj isn't None
         print('Using date parameter: {}'.format(event_date))
-        events_cursor = ucla_events_collection.find({'name': search_regex, 'start_time': date_regex_obj})
+        events_cursor = events_current_collection.find({'name': search_regex, 'start_time': date_regex_obj})
     else:
         print('No valid date parameter given...')
-        events_cursor = ucla_events_collection.find({'name': search_regex})
+        events_cursor = events_current_collection.find({'name': search_regex})
 
     if events_cursor.count() > 0:
         for event in events_cursor:
@@ -223,10 +223,10 @@ def get_events_by_category(event_category):
     date_regex_obj = event_utils.construct_date_regex(event_date)
     if date_regex_obj:
         print('Using date parameter: {}'.format(event_date))
-        events_cursor = ucla_events_collection.find({'category': cat_regex_obj, 'start_time': date_regex_obj})
+        events_cursor = events_current_collection.find({'category': cat_regex_obj, 'start_time': date_regex_obj})
     else:
         print('No valid date parameter given...')
-        events_cursor = ucla_events_collection.find({'category': cat_regex_obj})
+        events_cursor = events_current_collection.find({'category': cat_regex_obj})
 
     if events_cursor.count() > 0:
         for event in events_cursor:
@@ -257,10 +257,10 @@ def get_event_categories():
     date_regex_obj = event_utils.construct_date_regex(event_date)
     if date_regex_obj:
         print('Using date parameter: {}'.format(event_date))
-        events_cursor = ucla_events_collection.find({'category': {'$exists': True}, 'start_time': date_regex_obj})
+        events_cursor = events_current_collection.find({'category': {'$exists': True}, 'start_time': date_regex_obj})
     else:
         print('No valid date parameter given...')
-        events_cursor = ucla_events_collection.find({'category': {'$exists': True}})
+        events_cursor = events_current_collection.find({'category': {'$exists': True}})
 
     if events_cursor.count() > 0:
         for event in events_cursor:
@@ -271,19 +271,4 @@ def get_event_categories():
     else:
         print('Cannot find any events with categories!')
     return jsonify({'categories': output})
-
-# DELETE
-
-# If needed, clean database of duplicate documents
-# TODO: NOT a public route @Jason do you need this here or where or what
-@events.route('/remove-duplicates', methods=['DELETE'])
-def remove_db_duplicates():
-    total_dups = []
-
-    # Difference between append and extend: extend flattens out lists to add elements, append adds 1 element
-    total_dups.extend(event_utils.clean_collection(ucla_events_collection))
-    total_dups.extend(event_utils.clean_collection(saved_pages_collection))
-    total_dups.extend(event_utils.clean_collection(events_ml_collection))
-
-    return jsonify(total_dups)
 

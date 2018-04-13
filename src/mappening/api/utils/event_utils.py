@@ -1,6 +1,5 @@
-from mappening.utils.database import ucla_events_collection, events_ml_collection
+from mappening.utils.database import events_current_collection, events_ml_collection, events_test_collection
 from . import event_caller
-
 
 from flask import jsonify
 import time, datetime, dateutil.parser
@@ -17,7 +16,7 @@ def find_events_in_database(find_key='', find_value='', one_result_expected=Fals
         search_pair[find_key] = find_value
 
     if one_result_expected:
-        single_event = ucla_events_collection.find_one(search_pair)
+        single_event = events_current_collection.find_one(search_pair)
         if single_event:
             output.append(process_event_info(single_event))
             if print_results:
@@ -27,7 +26,7 @@ def find_events_in_database(find_key='', find_value='', one_result_expected=Fals
             # i.e. no other conditional branch is entered after this one, same with multiple event case below
             print('No single event with attribute {0}: value {1}'.format(find_key, find_value))
     else:
-        events_cursor = ucla_events_collection.find(search_pair)
+        events_cursor = events_current_collection.find(search_pair)
         if events_cursor.count() > 0:
             for event in events_cursor:
                 output.append(process_event_info(event))
@@ -131,44 +130,30 @@ def clean_collection(collection):
         else:
             unique_ids.add(curr_id)
     return dups
-
-def call_populate_events_database():
-    # boolean doesn't work here: if clear parameter has any value, it is a string
-    # all non-empty strings are true, so just take it as a string
-    clear_old_db = request.args.get('clear', default='False', type=str)
-    print(clear_old_db, type(clear_old_db))
-    # could do .lower(), but only works for ASCII in Python 2...
-    if clear_old_db == 'True' or clear_old_db == 'true':
-        ucla_events_collection.delete_many({})
-
-    earlier_day_bound = request.args.get('days', default=0, type=int)
-    print(earlier_day_bound)
-    return update_ucla_events_database(earlier_day_bound)
-
     
 # Get all UCLA-related Facebook events and add to database
-def update_ucla_events_database(earlier_day_bound=0):
+def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_db=False, refresh_pages=False):
     print('\n\n\n\n\n\n\n\n######\n\n######\n\n######\n\n')
     print('BEGIN POPULATING EVENTS DATABASE')
     print('\n\n######\n\n######\n\n######\n\n\n\n\n\n\n')
     # Location of Bruin Bear
     # current_events = get_facebook_events(34.070964, -118.444757)
     # take out all current events from DB, put into list, check for updates
-    processed_db_events = event_caller.update_current_events(list(ucla_events_collection.find()), earlier_day_bound)
+    processed_db_events = event_caller.update_current_events(list(events_current_collection.find()), days_back_in_time)
 
     # actually update all in database, but without mass deletion (for safety)
-    for old_event in tqdm(ucla_events_collection.find()):
+    for old_event in tqdm(events_current_collection.find()):
         event_id = old_event['id']
         updated_event = processed_db_events.get(event_id)
         # if event should be kept and updated
         if updated_event:
-            ucla_events_collection.delete_one({'id': event_id})
-            ucla_events_collection.insert_one(updated_event)
+            events_current_collection.delete_one({'id': event_id})
+            events_current_collection.insert_one(updated_event)
         # event's time has passed, according to update_current_events
         else:
-            ucla_events_collection.delete_one({'id': event_id})
+            events_current_collection.delete_one({'id': event_id})
 
-    new_events_data = event_caller.get_facebook_events(earlier_day_bound)
+    new_events_data = event_caller.get_facebook_events(days_back_in_time)
     # debugging events output
     # with open('events_out.json', 'w') as outfile:
     #     json.dump(new_events_data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
@@ -190,7 +175,7 @@ def update_ucla_events_database(earlier_day_bound=0):
         # don't need to do anything if event found previously, since updated in update_current_events()
         if existing_event:
             continue
-        ucla_events_collection.insert_one(event)
+        events_current_collection.insert_one(event)
         new_count += 1
 
         # below = UPDATE: pymongo only allows update of specifically listed attributes in a dictionary...
@@ -203,6 +188,15 @@ def update_ucla_events_database(earlier_day_bound=0):
         if update_event:
             events_ml_collection.delete_one({'id': curr_id})
         events_ml_collection.insert_one(event)
+
+    # remove duplicates, just in case
+    total_dups = []
+
+    # Difference between append and extend: extend flattens out lists to add elements, append adds 1 element
+    total_dups.extend(clean_collection(events_current_collection))
+    total_dups.extend(clean_collection(pages_saved_collection))
+    total_dups.extend(clean_collection(events_ml_collection))
+    # TODO: put dups count in log too
 
     return 'Updated with {0} retrieved events, {1} new ones.'.format(new_events_data['metadata']['events'], new_count)
 
