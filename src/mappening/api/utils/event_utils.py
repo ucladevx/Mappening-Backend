@@ -130,6 +130,20 @@ def clean_collection(collection):
         else:
             unique_ids.add(curr_id)
     return dups
+
+# def call_populate_events_database():
+#     # boolean doesn't work here: if clear parameter has any value, it is a string
+#     # all non-empty strings are true, so just take it as a string
+#     clear_old_db = request.args.get('clear', default='False', type=str)
+#     print(clear_old_db, type(clear_old_db))
+#     # could do .lower(), but only works for ASCII in Python 2...
+#     if clear_old_db == 'True' or clear_old_db == 'true':
+#         events_current_collection.delete_many({})
+
+#     earlier_day_bound = request.args.get('days', default=0, type=int)
+#     print(earlier_day_bound)
+#     return update_ucla_events_database(earlier_day_bound)
+
     
 # Get all UCLA-related Facebook events and add to database
 def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_db=False, refresh_pages=False):
@@ -196,6 +210,7 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
     total_dups.extend(clean_collection(events_current_collection))
     total_dups.extend(clean_collection(pages_saved_collection))
     total_dups.extend(clean_collection(events_ml_collection))
+    print('# duplicates: {}'.format(len(total_dups)))
     # TODO: put dups count in log too
 
     return 'Updated with {0} retrieved events, {1} new ones.'.format(new_events_data['metadata']['events'], new_count)

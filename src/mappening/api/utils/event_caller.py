@@ -508,6 +508,3 @@ if __name__ == '__main__':
     
     # find_many_events()
 
-    # add_pages_from_json('holy_groups.json')
-    # add_pages_from_json('holy_pages.json')
-

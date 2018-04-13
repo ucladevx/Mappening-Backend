@@ -104,21 +104,21 @@ events = Blueprint('events', __name__)
 
 @events.route('/', methods=['GET'])
 def get_all_events():
-    """ 
+    """
     :Route: /
 
-    :Description: Returns a GeoJSON of all events within a few miles of UCLA 
+    :Description: Returns a GeoJSON of all events within a few miles of UCLA
 
     """
     return event_utils.find_events_in_database(print_results=True)
 
 # SEARCH
 
-# IN GENERAL: specify event on specific date with '?start=<event_start_date>'
-@events.route('/search/<path:search_term>', methods=['GET'])
-def search_events(search_term):
-    """ 
-    :Route: /search/<search_term>[?start=<event_start_date>]
+@events.route('/search/<search_term>', defaults={'event_date': None}, methods=['GET'])
+@events.route('/search/<search_term>/<event_date>', methods=['GET'])
+def search_events(search_term, event_date):
+    """
+    :Route: /search/<search_term>/<event_date>
 
     :Description: Returns GeoJSON of all events whose names contain the search term. Useful for a search bar. Can be used to search events on a particular day as well. In general, specify events of a certain day using '?start=<event_start_date>'
 
@@ -130,7 +130,6 @@ def search_events(search_term):
     """
     output = []
     # optional event date using URL query parameter
-    event_date = request.args.get('start', default=None, type=str)
     search_regex = re.compile('.*' + search_term + '.*', re.IGNORECASE)
 
     date_regex_obj = event_utils.construct_date_regex(event_date)
@@ -140,7 +139,6 @@ def search_events(search_term):
         events_cursor = events_current_collection.find({'name': search_regex, 'start_time': date_regex_obj})
     else:
         print('No valid date parameter given...')
-        events_cursor = events_current_collection.find({'name': search_regex})
 
     if events_cursor.count() > 0:
         for event in events_cursor:
@@ -179,7 +177,7 @@ def get_event_by_id(event_id):
 # MULTIPLE EVENTS
 
 # Get all events with free food
-# TODO: ml => free food 
+# TODO: ml => free food
 @events.route('/food', methods=['GET'])
 def get_free_food_events():
     return get_events_by_category('food', None)
@@ -188,9 +186,9 @@ def get_free_food_events():
 def get_events_by_date(event_date):
     """
     :Route: /date/<event_date>
-    
+
     :Description: Returns GeoJSON of all events starting on given date
-    
+
     :param str event_date: case-insensitive date string with raw date format or a commonly parseable format (e.g. DD MONTH YYYY -> 22 January 2018)
 
     """
@@ -201,12 +199,13 @@ def get_events_by_date(event_date):
     return event_utils.find_events_in_database('start_time', date_regex_obj)
 
 @events.route('/category/<event_category>', methods=['GET'])
-def get_events_by_category(event_category):
+@events.route('/category/<event_category>/<event_date>', methods=['GET'])
+def get_events_by_category(event_category, event_date):
     """
-    :Route: /category/<event_category>[?start=<event_start_date>]
-        
+    :Route: /category/<event_category>/<event_date>
+
     :Description: Returns GeoJSON of all events of the given category. Can also find all events of a certain category that start on the given date as well.
-    
+
     :param str event_category: case-insensitive category string to match with event categories (e.g. food, theater)
 
     :param event_date: an optional case-insensitive string with raw date format or a commonly parseable format (e.g. DD MONTH YYYY -> 22 January 2018)
@@ -219,7 +218,6 @@ def get_events_by_category(event_category):
     regex_str = '^{0}|{0}$'.format(event_category.upper())
     cat_regex_obj = re.compile(regex_str)
 
-    event_date = request.args.get('start', default=None, type=str)
     date_regex_obj = event_utils.construct_date_regex(event_date)
     if date_regex_obj:
         print('Using date parameter: {}'.format(event_date))
@@ -237,13 +235,14 @@ def get_events_by_category(event_category):
 
 # CATEGORIES
 
-@events.route('/categories', methods=['GET'])
-def get_event_categories():
+@events.route('/categories', defaults={'event_date': None}, methods=['GET'])
+@events.route('/categories/<event_date>', methods=['GET'])
+def get_event_categories(event_date):
     """
-    :Route: /categories[?start=<event_start_date>]
-    
+    :Route: /categories/<event_date>
+
     :Description: Returns JSON of all event categories used in all events. Can also find all event categories for events that start on a given date. Potential Categories: Crafts, Art, Causes, Comedy, Dance, Drinks, Film, Fitness, Food, Games, Gardening, Health, Home, Literature, Music, Other, Party, Religion, Shopping, Sports, Theater, Wellness Conference, Lecture, Neighborhood, Networking
-    
+
     :param event_date: an optional case-insensitive string with raw date format or a commonly parseable format (e.g. DD MONTH YYYY -> 22 January 2018)
     :type event_date: str or None
 
@@ -253,7 +252,6 @@ def get_event_categories():
     uniqueList = []
     output = []
 
-    event_date = request.args.get('start', default=None, type=str)
     date_regex_obj = event_utils.construct_date_regex(event_date)
     if date_regex_obj:
         print('Using date parameter: {}'.format(event_date))

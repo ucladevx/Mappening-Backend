@@ -18,7 +18,7 @@ print("Connected to database!")
 events_test_collection = db.events_test
 
 # events.py
-events_current_collection = db.ucla_events  # TODO: change this to events_current, on MLab too
+events_current_collection = db.events_current
 pages_saved_collection = db.pages_saved
 pages_unwanted_collection = db.pages_unwanted
 events_ml_collection = db.events_ml
