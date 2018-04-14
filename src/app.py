@@ -28,7 +28,7 @@ def index():
 
 if __name__ == "__main__":
     print('Arguments passed: {0}'.format(args))
-    sys.exit()
+    # sys.exit()
 
     # Another thread to run the periodic events update, daily
     event_update_thread = Thread(target = scheduler.event_thread_func)
@@ -36,10 +36,9 @@ if __name__ == "__main__":
 
     code_update_date = "4/12/18"
     print("Updated on: {0}".format(code_update_date))
-    print("GET NEW EVENTS...\n")
     dbit = args.days_before
     # pass in args from command line, need to check it's there
-    if not dbit:
+    if not dbit or dbit < 1:
         dbit = 0
     event_utils.update_ucla_events_database(use_test=args.test,
                                             days_back_in_time=dbit,

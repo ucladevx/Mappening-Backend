@@ -150,22 +150,28 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
     print('\n\n\n\n\n\n\n\n######\n\n######\n\n######\n\n')
     print('BEGIN POPULATING EVENTS DATABASE')
     print('\n\n######\n\n######\n\n######\n\n\n\n\n\n\n')
-    # Location of Bruin Bear
-    # current_events = get_facebook_events(34.070964, -118.444757)
+
+    if use_test:
+        changed_collection = events_test_collection
+    else:
+        changed_collection = events_current_collection
+
+    if clear_old_db:
+        changed_collection.delete_many({})
     # take out all current events from DB, put into list, check for updates
-    processed_db_events = event_caller.update_current_events(list(events_current_collection.find()), days_back_in_time)
+    processed_db_events = event_caller.update_current_events(list(changed_collection.find()), days_back_in_time)
 
     # actually update all in database, but without mass deletion (for safety)
-    for old_event in tqdm(events_current_collection.find()):
+    for old_event in tqdm(changed_collection.find()):
         event_id = old_event['id']
         updated_event = processed_db_events.get(event_id)
         # if event should be kept and updated
         if updated_event:
-            events_current_collection.delete_one({'id': event_id})
-            events_current_collection.insert_one(updated_event)
+            changed_collection.delete_one({'id': event_id})
+            changed_collection.insert_one(updated_event)
         # event's time has passed, according to update_current_events
         else:
-            events_current_collection.delete_one({'id': event_id})
+            changed_collection.delete_one({'id': event_id})
 
     new_events_data = event_caller.get_facebook_events(days_back_in_time)
     # debugging events output
@@ -189,13 +195,13 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
         # don't need to do anything if event found previously, since updated in update_current_events()
         if existing_event:
             continue
-        events_current_collection.insert_one(event)
+        changed_collection.insert_one(event)
         new_count += 1
 
         # below = UPDATE: pymongo only allows update of specifically listed attributes in a dictionary...
         # so delete old if exists, then insert new
 
-        # See if event already existed
+        # See if event already existed in historical events records
         update_event = events_ml_collection.find_one({'id': curr_id})
 
         # If it existed then delete it, new event gets inserted either way
@@ -206,8 +212,8 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
     # remove duplicates, just in case
     total_dups = []
 
-    # Difference between append and extend: extend flattens out lists to add elements, append adds 1 element
-    total_dups.extend(clean_collection(events_current_collection))
+    # Difference between append and extend: extend flattens out lists to add multiple elements, append adds 1 element
+    total_dups.extend(clean_collection(changed_collection))
     total_dups.extend(clean_collection(pages_saved_collection))
     total_dups.extend(clean_collection(events_ml_collection))
     print('# duplicates: {}'.format(len(total_dups)))
