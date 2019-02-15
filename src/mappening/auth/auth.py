@@ -14,6 +14,8 @@ import json
 # Route Prefix: /auth
 auth = Blueprint('auth', __name__)
 
+# TODO(trinakat): Clean up/move aside for google auth
+
 # Got APP_ID and APP_SECRET from Mappening app with developers.facebook.com
 DEBUG = True
 auth.debug = DEBUG

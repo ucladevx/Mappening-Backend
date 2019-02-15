@@ -10,6 +10,8 @@ from operator import itemgetter
 # Must be on same level as app.py
 data = json.load(open('sampleData.json'))
 
+# TODO(trinakat): clean up, refactor for new locations API
+
 # TEST
 
 # Use ucla tkinter GUI to process tkinter_UCLA_locations
