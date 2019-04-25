@@ -11,7 +11,7 @@ from definitions import CENTER_LATITUDE, CENTER_LONGITUDE, BASE_EVENT_START_BOUN
 from mappening.utils.database import events_fb_collection, events_eventbrite_collection, events_test_collection, fb_pages_saved_collection
 from mappening.utils.database import events_current_processed_collection
 
-import facebook_scraper, eventbrite_scraper
+import get_fbscraper, process_fbscraper, eventbrite_scraper
 
 # each website source has its own database, where raw event info is stored
 all_raw_collections = {
@@ -210,7 +210,7 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
     
     clean_up_existing_events(days_back_in_time)
 
-    eb_count = eventbrite_scraper.entire_eventbrite_retrieval(days_back_in_time)
+    eb_count = eventbrite_scraper.process_eventbrite(eventbrite_scraper.entire_eventbrite_retrieval(days_back_in_time))
 
     # processed_db_events = 'todo'
     new_events_data = {'metadata': {'events': eb_count}}
