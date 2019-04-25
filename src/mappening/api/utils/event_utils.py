@@ -210,7 +210,7 @@ def update_ucla_events_database(use_test=False, days_back_in_time=0, clear_old_d
     
     clean_up_existing_events(days_back_in_time)
 
-    eb_count = eventbrite_scraper.process_eventbrite(eventbrite_scraper.entire_eventbrite_retrieval(days_back_in_time))
+    eb_count = eventbrite_scraper.process_eventbrite(eventbrite_scraper.eventbrite_retrieval(days_back_in_time))
 
     # processed_db_events = 'todo'
     new_events_data = {'metadata': {'events': eb_count}}
