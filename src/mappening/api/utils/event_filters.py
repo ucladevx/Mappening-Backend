@@ -201,6 +201,7 @@ def filter_by_nearby(unfiltered_events, latitude, longitude):
 # def filter_by_free_food(search_dict):
 #   print("filter_by_free_food")
   # TODO JORGE ml
+  
 
 def is_valid_coords(in_lat, in_long):
   try:
